@@ -1,0 +1,41 @@
+name: Terraform Deploy
+
+# on:
+#   push:
+#     branches:
+#       - main  # Or any branch you want to trigger deployment from
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read   # Required to clone the repo
+
+jobs:
+  terraform:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials via OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::329599657799:role/GitHubActionsTerraformRole
+        aws-region: us-east-1  # Change to your region
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init
+      run: cd Practice && terraform init
+
+    - name: Terraform Validate
+      run: cd Practice && terraform validate
+
+    - name: Terraform Plan
+      run: cd Practice && terraform plan
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      run: cd Practice && terraform apply -auto-approve
